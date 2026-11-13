@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#121d26">
+  <meta name="description" content="Офлайн-калькулятори для інженерів КВПіА">
+  <script>
+    if (location.protocol !== 'file:') {
+      const manifest = document.createElement('link');
+      manifest.rel = 'manifest';
+      manifest.href = './manifest.webmanifest';
+      document.head.append(manifest);
+    }
+  </script>
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" href="./icons/icon-192.png" type="image/png">
+  <link rel="stylesheet" href="./styles.css">
+  <title>КВПіА · Калькулятори</title>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <a class="brand" href="#scale" aria-label="КВПіА — головна">
+        <img src="./icons/icon-192.png" alt="" width="42" height="42">
+        <span><strong>КВПіА</strong><small>Польові калькулятори</small></span>
+      </a>
+      <div class="top-actions">
+        <span class="status" id="offline-status" role="status">Підготовка офлайн</span>
+        <button class="top-button" id="install" type="button">На початковий екран</button>
+        <button class="top-button" id="update" type="button" hidden>Оновити</button>
+      </div>
+    </div>
+  </header>
+  <div class="workspace">
+    <nav class="navigation" aria-label="Інструменти">
+      <p class="nav-label">Інструменти</p>
+      <a href="#scale" aria-current="page"><span aria-hidden="true">↔</span> Шкала<span class="wide-only"> і сигнал</span></a>
+      <a href="#sensors"><span aria-hidden="true">°</span> Датчики</a>
+      <a href="#units"><span aria-hidden="true">≡</span> Одиниці</a>
+      <a href="#guide"><span aria-hidden="true">?</span> Довідка</a>
+    </nav>
+
+    <main id="main">
+      <section id="scale" data-page aria-labelledby="scale-title">
+        <div class="page-heading">
+          <h1 id="scale-title">Шкала ↔ сигнал</h1>
+          <p>Перерахунок між фізичною величиною та сигналом приладу.</p>
+        </div>
+        <div class="tool-grid">
+          <form id="scale-form" class="panel" novalidate>
+            <h2>Параметри</h2>
+            <fieldset class="direction">
+              <legend>Напрямок</legend>
+              <label><input type="radio" name="scaleDirection" value="forward" checked><span>Шкала → сигнал</span></label>
+              <label><input type="radio" name="scaleDirection" value="inverse"><span>Сигнал → шкала</span></label>
+            </fieldset>
+            <div class="pair">
+              <label>Характеристика
+                <select id="curve">
+                  <option value="linear">Лінійна</option>
+                  <option value="square">Квадратична</option>
+                  <option value="root">Коренева</option>
+                </select>
+              </label>
+              <label>Нахил
+                <select id="slope"><option value="up">Зростаюча</option><option value="down">Спадна</option></select>
+              </label>
+            </div>
+            <fieldset>
+              <legend>Фізична шкала</legend>
+              <div class="triple">
+                <label>Від<input id="scale-low" inputmode="decimal" value="0"></label>
+                <label>До<input id="scale-high" inputmode="decimal" value="100"></label>
+                <label>Одиниця<input id="scale-unit" value="%" maxlength="16"></label>
+              </div>
+            </fieldset>
+            <label>Діапазон сигналу
+              <select id="preset">
+                <option value="ma420">4–20 мА</option><option value="ma020">0–20 мА</option>
+                <option value="ma05">0–5 мА</option><option value="v01">0–1 В</option>
+                <option value="v010">0–10 В</option><option value="air">0,2–1 кгс/см²</option>
+                <option value="custom">Власний діапазон</option>
+              </select>
+            </label>
+            <div id="custom-signal" class="triple" hidden>
+              <label>Від<input id="signal-low" inputmode="decimal" value="4"></label>
+              <label>До<input id="signal-high" inputmode="decimal" value="20"></label>
+              <label>Одиниця<input id="signal-unit" value="мА" maxlength="16"></label>
+            </div>
+            <label class="primary-field"><span id="scale-input-label">Значення шкали</span>
+              <input id="scale-value" inputmode="decimal" enterkeyhint="done" value="50" aria-describedby="scale-error">
+            </label>
+            <p class="error" id="scale-error" role="status" hidden></p>
+          </form>
+          <div class="result">
+            <h2>Результат</h2>
+            <p class="reading"><output id="scale-result" aria-live="polite">—</output> <span id="scale-result-unit"></span></p>
+            <div id="scale-meter" class="meter" aria-hidden="true"><span></span></div>
+            <div class="meter-labels" aria-hidden="true"><span id="meter-start"></span><span id="meter-end"></span></div>
+            <p id="scale-warning" class="warning" hidden>Екстраполяція за межі діапазону</p>
+            <button class="copy" type="button" data-copy="scale-result">Копіювати результат</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="sensors" data-page aria-labelledby="sensor-title" hidden>
+        <div class="page-heading">
+          <h1 id="sensor-title">Температурні датчики</h1>
+          <p>Температура, опір і термоЕРС за номінальними характеристиками.</p>
+        </div>
+        <div class="tool-grid">
+          <form id="sensor-form" class="panel" novalidate>
+            <h2>Параметри</h2>
+            <label>Датчик<select id="sensor-type"></select></label>
+            <p id="sensor-range" class="muted"></p>
+            <fieldset class="direction">
+              <legend>Напрямок</legend>
+              <label><input type="radio" name="sensorDirection" value="forward" checked><span id="sensor-forward">°C → Ω</span></label>
+              <label><input type="radio" name="sensorDirection" value="inverse"><span id="sensor-inverse">Ω → °C</span></label>
+            </fieldset>
+            <label id="cold-group" hidden>Температура холодного спаю, °C
+              <input id="cold-junction" inputmode="decimal" value="0">
+            </label>
+            <label class="primary-field"><span id="sensor-input-label">Температура, °C</span>
+              <input id="sensor-value" inputmode="decimal" enterkeyhint="done" value="0" aria-describedby="sensor-error">
+            </label>
+            <p class="error" id="sensor-error" role="status" hidden></p>
+          </form>
+          <div class="result">
+            <h2>Результат</h2>
+            <p class="reading"><output id="sensor-result" aria-live="polite">—</output> <span id="sensor-result-unit"></span></p>
+            <button class="copy" type="button" data-copy="sensor-result">Копіювати результат</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="units" data-page aria-labelledby="units-title" hidden>
+        <div class="page-heading">
+          <h1 id="units-title">Конвертер одиниць</h1>
+          <p>Виберіть величину й одиницю, щоб отримати всі еквіваленти.</p>
+        </div>
+        <div class="tool-grid">
+          <form id="units-form" class="panel" novalidate>
+            <h2>Параметри</h2>
+            <label>Фізична величина<select id="quantity"></select></label>
+            <label>Вихідна одиниця<select id="from-unit"></select></label>
+            <label class="primary-field">Значення
+              <input id="units-value" inputmode="decimal" enterkeyhint="done" value="1" aria-describedby="units-error">
+            </label>
+            <p class="error" id="units-error" role="status" hidden></p>
+          </form>
+          <div class="result">
+            <h2>Еквіваленти</h2>
+            <ul id="unit-results" class="unit-results" aria-label="Результати перерахунку"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="guide" data-page aria-labelledby="guide-title" hidden>
+        <div class="page-heading"><h1 id="guide-title">Довідка</h1></div>
+        <div class="guide">
+          <label>Пошук у довідці
+            <input id="guide-search" type="search" placeholder="Наприклад, Pt100 або 4–20 мА">
+          </label>
+          <div id="guide-results"></div>
+          <p id="no-articles" class="muted" role="status" hidden>За цим запитом нічого не знайдено.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="install-dialog" aria-labelledby="install-title">
+    <h2 id="install-title">Додати КВПіА на iPhone</h2>
+    <ol>
+      <li>Відкрийте цю сторінку в Safari.</li>
+      <li>Натисніть «Поділитися», а потім «На початковий екран».</li>
+      <li>Увімкніть «Відкрити як вебзастосунок», якщо цей пункт є, і натисніть «Додати».</li>
+      <li>Відкрийте застосунок з іконки з доступом до мережі. Дочекайтеся статусу «Готово офлайн».</li>
+    </ol>
+    <form method="dialog"><button type="submit" class="copy">Зрозуміло</button></form>
+  </dialog>
+  <div id="notice" role="status" class="notice" hidden></div>
+  <script src="./calculations.js" defer></script>
+  <script src="./guide.js" defer></script>
+  <script src="./app.js" defer></script>
+</body>
+</html>
